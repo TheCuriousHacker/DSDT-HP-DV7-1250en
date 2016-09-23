@@ -27,7 +27,10 @@ into method label BATT code_regex BMFN, replaceall_matched begin RECB(0x90,72), 
 #into method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BMFN, replaceall_matched begin (^^PCI0.LPC.EC.RECB(0x10,72), end;
 
 
+# ----------------------------
 # Utility methods to read/write buffers from/to EC
+# ----------------------------
+
 # Remove entries if exists
 into method label RE1B parent_label EC remove_entry;
 into method label RECB parent_label EC remove_entry;
@@ -56,3 +59,37 @@ Method (RECB, 2, Serialized)\n
     Return(TEMP)\n
 }\n
 end;
+
+# ----------------------------
+# Utility method to write to EC buffers
+# ----------------------------
+
+# Remove entries if exists
+into method label WE1B parent_label EC remove_entry;
+into method label WECB parent_label EC remove_entry;
+
+# Add methods
+into device label EC0 insert
+begin
+Method (WE1B, 2, NotSerialized)\n
+{\n
+    OperationRegion(ERAM, EmbeddedControl, Arg0, 1)\n
+    Field(ERAM, ByteAcc, NoLock, Preserve) { BYTE, 8 }\n
+    Store(Arg1, BYTE)\n
+}\n
+Method (WECB, 3, Serialized)\n
+{\n
+    ShiftRight(Arg1, 3, Arg1)\n
+    Name(TEMP, Buffer(Arg1) { })\n
+    Store(Arg2, TEMP)\n
+    Add(Arg0, Arg1, Arg1)\n
+    Store(0, Local0)\n
+    While (LLess(Arg0, Arg1))\n
+    {\n
+        WE1B(Arg0, DerefOf(Index(TEMP, Local0)))\n
+        Increment(Arg0)\n
+        Increment(Local0)\n
+    }\n
+}\n
+end;
+
