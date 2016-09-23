@@ -1,16 +1,16 @@
 # ----------------------------
-# 16-bit registers
+# Deal with 16-bit registers
 # ----------------------------
 
-# ERIB Declaration
+# Fix ERIB Declaration
 into device label EC code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
 
 
 # ----------------------------
-# Fix 16-bit methods
+# Deal with 16-bit calls
 # ----------------------------
 
-# ERIB Store calls
+# Fix ERIB Store calls
 into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
 into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
 
@@ -24,14 +24,15 @@ into device label EC code_regex (BMFN,)\s+(72) replace_matched begin BMFX,%2 end
 
 # BMFN Store call
 into method label BATT code_regex BMFN, replaceall_matched begin RECB(0x90,72), end;
-
-# BMFN
 #into method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BMFN, replaceall_matched begin (^^PCI0.LPC.EC.RECB(0x10,72), end;
 
 
 # Utility methods to read/write buffers from/to EC
+# Remove entries if exists
 into method label RE1B parent_label EC remove_entry;
-into method label RECB parent_label EC  remove_entry;
+into method label RECB parent_label EC remove_entry;
+
+# Add methods RE1B and RECB
 into device label EC insert
 begin
 Method (RE1B, 1, NotSerialized)\n
