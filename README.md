@@ -1,0 +1,2 @@
+# DSDT-HP-DV7-1250en
+DSDT Patches for HP-DV7-1250en
