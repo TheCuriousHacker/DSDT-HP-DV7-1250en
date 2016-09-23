@@ -1,5 +1,5 @@
 # 16-bit registers
-into device label EC0 code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
+into device label ECRM code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
 
 # fix 16-bit methods
 into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
