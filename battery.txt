@@ -1,0 +1,2 @@
+# 16
+into device label EC0 code_regex ERIB,\s+16 replace_matched begin ERI0,8,ERI1,8 end;
