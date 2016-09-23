@@ -69,7 +69,7 @@ into method label WE1B parent_label EC remove_entry;
 into method label WECB parent_label EC remove_entry;
 
 # Add methods
-into device label EC0 insert
+into device label EC insert
 begin
 Method (WE1B, 2, NotSerialized)\n
 {\n
