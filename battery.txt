@@ -1,10 +1,6 @@
-# 16-bit EC
-into device label EC0 code_regex ERIB,\s+16 replace_matched begin ERI0,8,ERI1,8 end;
-into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replace_matched 
-begin
-Store(Arg0, ERI0) Store(ShiftRight(Arg0, 8), ERI1)
-end;
-into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replace_matched
-begin
-Store(Arg0, ERI0) Store(ShiftRight(Arg0, 8), ERI1)
-end;
+# 16-bit registers
+into device label EC0 code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
+
+# fix 16-bit methods
+into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
+into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
