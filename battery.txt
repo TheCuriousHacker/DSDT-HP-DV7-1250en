@@ -1,5 +1,5 @@
 # 16-bit registers
-into device label ECRM code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
+into device label EC code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
 
 
 # fix 16-bit methods
