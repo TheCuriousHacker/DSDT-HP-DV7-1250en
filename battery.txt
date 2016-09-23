@@ -3,7 +3,52 @@
 # ----------------------------
 
 # Fix ERIB Declaration
-into device label EC code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 end;
+into device label EC code_regex ERIB,\s+16 replace_matched begin XVA0,8,XVA1,8 end;
+
+# Fix BSME Declaration
+into device label EC code_regex BSME,\s+16 replace_matched begin XVB,8,XVB1,8 end;
+
+# Fix BRC0 Declaration
+into device label EC code_regex BRC0,\s+16 replace_matched begin XVC0,8,XVC1,8 end;
+
+# Fix BSN0 Declaration
+into device label EC code_regex BSN0,\s+16 replace_matched begin XVD0,8,XVD1,8 end;
+
+# Fix BPV0 Declaration
+into device label EC code_regex BPV0,\s+16 replace_matched begin XVE0,8,XVE1,8 end;
+
+# Fix BDV0 Declaration
+into device label EC code_regex BDV0,\s+16 replace_matched begin XVF0,8,XVF1,8 end;
+
+# Fix BDC0 Declaration
+into device label EC code_regex BDC0,\s+16 replace_matched begin XVG0,8,XVG1,8 end;
+
+# Fix BFC0 Declaration
+into device label EC code_regex BFC0,\s+16 replace_matched begin XVH0,8,XVH1,8 end;
+
+# Fix BSCU Declaration
+into device label EC code_regex BSCU,\s+16 replace_matched begin XVI0,8,XVI1,8 end;
+
+# Fix BSTM Declaration
+into device label EC code_regex BSTM,\s+16 replace_matched begin XVJ0,8,XVJ1,8 end;
+
+# Fix BSTS Declaration
+into device label EC code_regex BSTS,\s+16 replace_matched begin XVK0,8,XVK1,8 end;
+
+# Fix BSC1 Declaration
+into device label EC code_regex BSC1,\s+16 replace_matched begin XVL0,8,XVL1,8 end;
+
+# Fix BSC2 Declaration
+into device label EC code_regex BSC2,\s+16 replace_matched begin XVM0,8,XVM1,8 end;
+
+# Fix BSC3 Declaration
+into device label EC code_regex BSC3,\s+16 replace_matched begin XVN0,8,XVN1,8 end;
+
+# Fix BSC4 Declaration
+into device label EC code_regex BSC4,\s+16 replace_matched begin XVO0,8,XVO1,8 end;
+
+# Fix BMD0 Declaration
+into device label EC code_regex BMD0,\s+16 replace_matched begin XVP0,8,XVP1,8 end;
 
 
 # ----------------------------
@@ -11,8 +56,8 @@ into device label EC code_regex ERIB,\s+16 replace_matched begin RIB0,8,RIB1,8 e
 # ----------------------------
 
 # Fix ERIB Store calls
-into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
-into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, RIB0)\nStore (ShiftRight(Arg0,8), RIB1) end;
+into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, XVA0)\nStore (ShiftRight(Arg0,8), XVA1) end;
+into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, XVA0)\nStore (ShiftRight(Arg0,8), XVA1) end;
 
 
 # ----------------------------
