@@ -1,2 +1,5 @@
 # DSDT-HP-DV7-1250en
-DSDT Patches for HP-DV7-1250en
+
+DSDT Patches for HP Pavilion dv7-1250en Notebook PC
+
+See more: http://h20564.www2.hp.com/hpsc/doc/public/display?docId=c01652509
