@@ -1,110 +1,3 @@
-# ---------------------------------------------------------
-# DSDT Battery Fix for HP Pavilion dv7-1250en Notebook PC
-# ---------------------------------------------------------
-# For using with RehabMan OS-X-ACPI-Battery-Driver, which implements
-# an Advanced Configuration and Power Interface (ACPI) based battery
-# manager kernel extension (kext/driver) for non-Apple laptops running OS X.
-# See: https://github.com/RehabMan/OS-X-ACPI-Battery-Driver
-# ---------------------------------------------------------
-
-
-# ---------------------------------------------------------
-# Utility methods for 16bit and 32bit registers
-# ---------------------------------------------------------
-
-into method label B1B2 remove_entry;
-into definitionblock code_regex . insert
-begin
-Method (B1B2, 2, NotSerialized) { Return (Or (Arg0, ShiftLeft (Arg1, 8))) }\n
-end;
-
-# ---------------------------------------------------------
-# Utility methods to read/write buffers from/to EC
-# ---------------------------------------------------------
-
-# Remove entries if exists
-into method label RE1B parent_label EC remove_entry;
-into method label RECB parent_label EC remove_entry;
-
-# Add methods RE1B and RECB
-into device label EC insert
-begin
-Method (RE1B, 1, NotSerialized)\n
-{\n
-    OperationRegion(ERAM, EmbeddedControl, Arg0, 1)\n
-    Field(ERAM, ByteAcc, NoLock, Preserve) { BYTE, 8 }\n
-    Return(BYTE)\n
-}\n
-Method (RECB, 2, Serialized)\n
-{\n
-    ShiftRight(Arg1, 3, Arg1)\n
-    Name(TEMP, Buffer(Arg1) { })\n
-    Add(Arg0, Arg1, Arg1)\n
-    Store(0, Local0)\n
-    While (LLess(Arg0, Arg1))\n
-    {\n
-        Store(RE1B(Arg0), Index(TEMP, Local0))\n
-        Increment(Arg0)\n
-        Increment(Local0)\n
-    }\n
-    Return(TEMP)\n
-}\n
-end;
-
-# ---------------------------------------------------------
-# Utility method to write to EC buffers
-# ---------------------------------------------------------
-
-# Remove entries if exists
-into method label WE1B parent_label EC remove_entry;
-into method label WECB parent_label EC remove_entry;
-
-# Add methods
-into device label EC insert
-begin
-Method (WE1B, 2, NotSerialized)\n
-{\n
-    OperationRegion(ERAM, EmbeddedControl, Arg0, 1)\n
-    Field(ERAM, ByteAcc, NoLock, Preserve) { BYTE, 8 }\n
-    Store(Arg1, BYTE)\n
-}\n
-Method (WECB, 3, Serialized)\n
-{\n
-    ShiftRight(Arg1, 3, Arg1)\n
-    Name(TEMP, Buffer(Arg1) { })\n
-    Store(Arg2, TEMP)\n
-    Add(Arg0, Arg1, Arg1)\n
-    Store(0, Local0)\n
-    While (LLess(Arg0, Arg1))\n
-    {\n
-        WE1B(Arg0, DerefOf(Index(TEMP, Local0)))\n
-        Increment(Arg0)\n
-        Increment(Local0)\n
-    }\n
-}\n
-end;
-
-# ---------------------------------------------------------
-# Deal with buffer fields
-# ---------------------------------------------------------
-
-# ----------- BMFN
-# Pay attention to offset! Fix offset if needed!
-#                    OperationRegion (ERAM, EmbeddedControl, Zero, 0xFF)
-#                    Field (ERAM, ByteAcc, Lock, Preserve)
-#                    {
-#                        Offset (0x02), 
-#                        MCER,   8, 
-#                        Offset (0x10), 
-#                        BMFN,   72, //!! 010
-
-# BMFN Declaration
-into device label EC code_regex (BMFN,)\s+(72) replace_matched begin BMFX,%2 end;
-
-# BMFN Store call
-into method label BATT code_regex BMFN, replaceall_matched begin RECB(0x10,72), end;
-#into method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BMFN, replaceall_matched begin (^^PCI0.LPC.EC.RECB(0x10,72), end;
-
 
 # ---------------------------------------------------------
 # Deal with 16-bit fields
@@ -113,7 +6,7 @@ into method label BATT code_regex BMFN, replaceall_matched begin RECB(0x10,72), 
 # ----------- ERIB
 
 # Fix ERIB Declaration
-into device label EC code_regex ERIB,\s+16 replace_matched begin XVA0,8,XVA1,8 end;
+into device label EC0 code_regex ERIB,\s+16 replace_matched begin XVA0,8,XVA1,8 end;
 
 # Fix ERIB Store calls
 into method label FANG code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched begin Store (Arg0, XVA0)\nStore (ShiftRight(Arg0,8), XVA1) end;
@@ -122,129 +15,127 @@ into method label FANW code_regex Store\s+\(Arg0,\s+ERIB\) replaceall_matched be
 # ----------- BSME
 
 # Fix BSME Declaration
-into device label EC code_regex BSME,\s+16 replace_matched begin XVB0,8,XVB1,8 end;
+into device label EC0 code_regex BSME,\s+16 replace_matched begin XVB0,8,XVB1,8 end;
 
 # Fix BSME Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSME, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVB0,^^PCI0.LPC.EC.XVB1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSME, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVB0,^^PCI0.LPC.EC0.XVB1), end;
 
 # ----------- BRC0
 
 # Fix BRC0 Declaration
-into device label EC code_regex BRC0,\s+16 replace_matched begin XVC0,8,XVC1,8 end;
+into device label EC0 code_regex BRC0,\s+16 replace_matched begin XVC0,8,XVC1,8 end;
 
 
 # Fix BRC0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BRC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVC0,^^PCI0.LPC.EC.XVC1), end;
-into_all method label _BST code_regex \(\^\^PCI0\.LPC\.EC\.BRC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVC0,^^PCI0.LPC.EC.XVC1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BRC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVC0,^^PCI0.LPC.EC0.XVC1), end;
+into_all method label _BST code_regex \(\^\^PCI0\.LPC\.EC0\.BRC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVC0,^^PCI0.LPC.EC0.XVC1), end;
 
 # ----------- BSN0
 
 # Fix BSN0 Declaration
-into device label EC code_regex BSN0,\s+16 replace_matched begin XVD0,8,XVD1,8 end;
+into device label EC0 code_regex BSN0,\s+16 replace_matched begin XVD0,8,XVD1,8 end;
 
 # Fix BSN0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSN0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVD0,^^PCI0.LPC.EC.XVD1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSN0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVD0,^^PCI0.LPC.EC0.XVD1), end;
 
 # ----------- BPV0
 
 # Fix BPV0 Declaration
-into device label EC code_regex BPV0,\s+16 replace_matched begin XVE0,8,XVE1,8 end;
+into device label EC0 code_regex BPV0,\s+16 replace_matched begin XVE0,8,XVE1,8 end;
 
 # Fix BPV0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BPV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVE0,^^PCI0.LPC.EC.XVE1), end;
-into_all method label _BST code_regex \(\^\^PCI0\.LPC\.EC\.BPV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVE0,^^PCI0.LPC.EC.XVE1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BPV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVE0,^^PCI0.LPC.EC0.XVE1), end;
+into_all method label _BST code_regex \(\^\^PCI0\.LPC\.EC0\.BPV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVE0,^^PCI0.LPC.EC0.XVE1), end;
 
 # ----------- BDV0
 
 # Fix BDV0 Declaration
-into device label EC code_regex BDV0,\s+16 replace_matched begin XVF0,8,XVF1,8 end;
+into device label EC0 code_regex BDV0,\s+16 replace_matched begin XVF0,8,XVF1,8 end;
 
 # Fix BDV0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BDV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVF0,^^PCI0.LPC.EC.XVF1), end;
-into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC\.BDV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVF0,^^PCI0.LPC.EC.XVF1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BDV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVF0,^^PCI0.LPC.EC0.XVF1), end;
+into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC0\.BDV0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVF0,^^PCI0.LPC.EC0.XVF1), end;
 
 # ----------- BDC0
 
 # Fix BDC0 Declaration
-into device label EC code_regex BDC0,\s+16 replace_matched begin XVG0,8,XVG1,8 end;
+into device label EC0 code_regex BDC0,\s+16 replace_matched begin XVG0,8,XVG1,8 end;
 
 # Fix BDC0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BDC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVG0,^^PCI0.LPC.EC.XVG1), end;
-into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC\.BDC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVG0,^^PCI0.LPC.EC.XVG1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BDC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVG0,^^PCI0.LPC.EC0.XVG1), end;
+into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC0\.BDC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVG0,^^PCI0.LPC.EC0.XVG1), end;
 
 # ----------- BFC0
 
 # Fix BFC0 Declaration
-into device label EC code_regex BFC0,\s+16 replace_matched begin XVH0,8,XVH1,8 end;
+into device label EC0 code_regex BFC0,\s+16 replace_matched begin XVH0,8,XVH1,8 end;
 
 # Fix BFC0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BFC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVH0,^^PCI0.LPC.EC.XVH1), end;
-into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC\.BFC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVH0,^^PCI0.LPC.EC.XVH1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BFC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVH0,^^PCI0.LPC.EC0.XVH1), end;
+into_all method label _BIF code_regex \(\^\^PCI0\.LPC\.EC0\.BFC0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVH0,^^PCI0.LPC.EC0.XVH1), end;
 
 # ----------- BSCU
 
 # Fix BSCU Declaration
-into device label EC code_regex BSCU,\s+16 replace_matched begin XVI0,8,XVI1,8 end;
+into device label EC0 code_regex BSCU,\s+16 replace_matched begin XVI0,8,XVI1,8 end;
 
 # Fix BSCU Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSCU, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVI0,^^PCI0.LPC.EC.XVI1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSCU, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVI0,^^PCI0.LPC.EC0.XVI1), end;
 
 # ----------- BSTM
 
 # Fix BSTM Declaration
-into device label EC code_regex BSTM,\s+16 replace_matched begin XVJ0,8,XVJ1,8 end;
+into device label EC0 code_regex BSTM,\s+16 replace_matched begin XVJ0,8,XVJ1,8 end;
 
 # Fix BSTM Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSTM, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVJ0,^^PCI0.LPC.EC.XVJ1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSTM, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVJ0,^^PCI0.LPC.EC0.XVJ1), end;
 
 # ----------- BSTS
 
 # Fix BSTS Declaration
-into device label EC code_regex BSTS,\s+16 replace_matched begin XVK0,8,XVK1,8 end;
+into device label EC0 code_regex BSTS,\s+16 replace_matched begin XVK0,8,XVK1,8 end;
 
 # Fix BSTS Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSTS, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVK0,^^PCI0.LPC.EC.XVK1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSTS, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVK0,^^PCI0.LPC.EC0.XVK1), end;
 
 # ----------- BSC1
 
 # Fix BSC1 Declaration
-into device label EC code_regex BSC1,\s+16 replace_matched begin XVL0,8,XVL1,8 end;
+into device label EC0 code_regex BSC1,\s+16 replace_matched begin XVL0,8,XVL1,8 end;
 
 # Fix BSC1 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSC1, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVL0,^^PCI0.LPC.EC.XVL1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSC1, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVL0,^^PCI0.LPC.EC0.XVL1), end;
 
 # ----------- BSC2
 
 # Fix BSC2 Declaration
-into device label EC code_regex BSC2,\s+16 replace_matched begin XVM0,8,XVM1,8 end;
+into device label EC0 code_regex BSC2,\s+16 replace_matched begin XVM0,8,XVM1,8 end;
 
 # Fix BSC2 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSC2, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVM0,^^PCI0.LPC.EC.XVM1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSC2, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVM0,^^PCI0.LPC.EC0.XVM1), end;
 
 # ----------- BSC3
 
 # Fix BSC3 Declaration
-into device label EC code_regex BSC3,\s+16 replace_matched begin XVN0,8,XVN1,8 end;
+into device label EC0 code_regex BSC3,\s+16 replace_matched begin XVN0,8,XVN1,8 end;
 
 # Fix BSC3 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSC3, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVN0,^^PCI0.LPC.EC.XVN1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSC3, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVN0,^^PCI0.LPC.EC0.XVN1), end;
 
 # ----------- BSC4
 
 # Fix BSC4 Declaration
-into device label EC code_regex BSC4,\s+16 replace_matched begin XVO0,8,XVO1,8 end;
+into device label EC0 code_regex BSC4,\s+16 replace_matched begin XVO0,8,XVO1,8 end;
 
 # Fix BSC4 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BSC4, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVO0,^^PCI0.LPC.EC.XVO1), end;
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BSC4, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVO0,^^PCI0.LPC.EC0.XVO1), end;
 
 # -----------
 
 # Fix BMD0 Declaration
-into device label EC code_regex BMD0,\s+16 replace_matched begin XVP0,8,XVP1,8 end;
+into device label EC0 code_regex BMD0,\s+16 replace_matched begin XVP0,8,XVP1,8 end;
 
 # Fix BMD0 Store calls
-into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC\.BMD0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC.XVP0,^^PCI0.LPC.EC.XVP1), end;
-
-
+into_all method label BATT code_regex \(\^\^PCI0\.LPC\.EC0\.BMD0, replaceall_matched begin (B1B2(^^PCI0.LPC.EC0.XVP0,^^PCI0.LPC.EC0.XVP1), end;
 
 
