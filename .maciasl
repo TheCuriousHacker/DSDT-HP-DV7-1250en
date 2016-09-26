@@ -1,9 +1,10 @@
-1 Fix errors	compile-errors-warnings.txt
-2 Rename Devices	device-renames.txt
-3 Add DTGP	Add method - DTGP.txt
-4 Audio	Audio - Add _DSM into HDEF.txt
-5 Fix Battery	battery.txt
-6 AppStore LAN0	LAN0.txt
-7 EHCI	EHCI.txt
-8 ICH9 USB sleep	ICH9 USB sleep.txt
-9 LPC ICH9	LPC ICH9.txt
+01 Fix errors	compile-errors-warnings.txt
+02 Rename Devices	device-renames.txt
+03 Add DTGP	Add method - DTGP.txt
+04 Audio	Audio - Add _DSM into HDEF.txt
+05 Fix Battery	battery.txt
+06 AppStore LAN0	LAN0.txt
+07 EHCI	EHCI.txt
+08 ICH9 USB sleep	ICH9 USB sleep.txt
+09 LPC ICH9	LPC ICH9.txt
+10 IRQ	IRQ.txt
