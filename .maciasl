@@ -4,3 +4,5 @@
 4 Audio	Audio - Add _DSM into HDEF.txt
 5 Fix Battery	battery.txt
 6 AppStore LAN0	LAN0.txt
+7 EHCI	EHCI.txt
+8 ICH9 USB sleep	ICH9 USB sleep.txt
