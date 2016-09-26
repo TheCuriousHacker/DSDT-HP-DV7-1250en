@@ -1,6 +1,5 @@
-Fix errors	compile-errors-warnings.txt
-Rename Devices	device-renames.txt
-Add DTGP	Add method - DTGP.txt
-Audio	Audio - Rename AZAL to HDEF.txt
-Audio	Audio - Add _DSM into HDEF.txt
-Fix Battery	battery.txt
+1 Fix errors	compile-errors-warnings.txt
+2 Rename Devices	device-renames.txt
+3 Add DTGP	Add method - DTGP.txt
+4 Audio	Audio - Add _DSM into HDEF.txt
+5 Fix Battery	battery.txt
