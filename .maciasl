@@ -6,3 +6,4 @@
 6 AppStore LAN0	LAN0.txt
 7 EHCI	EHCI.txt
 8 ICH9 USB sleep	ICH9 USB sleep.txt
+9 LPC ICH9	LPC ICH9.txt
