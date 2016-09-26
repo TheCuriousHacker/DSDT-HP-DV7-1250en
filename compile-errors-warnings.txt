@@ -1,0 +1,7 @@
+# Fix compile errors and warnings
+
+# Fix:  Invalid object type for reserved name (_PLD: found Buffer, Package required)
+into_all all code_regex (Name\s*\(_PLD,\s*)Buffer(\s\(0x10\)[^\)]*) replaceall_matched
+begin
+%1Package() { Buffer%2}
+end;
